@@ -5,7 +5,7 @@ using UnityEngine.Events;
 
 public class Sensor : MonoBehaviour
 {
-    public UnityAction MotionDetected;
+    public event UnityAction MotionDetected;
 
     public void OnTriggerEnter2D(Collider2D collision)
     {
