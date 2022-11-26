@@ -1,53 +1,37 @@
+using System;
 using System.Collections;
 using UnityEngine;
 
 [RequireComponent(typeof(AudioSource))]
 public class Signalization : MonoBehaviour
 {
-    [SerializeField] private float _maxVolume = 1.0f;
     [SerializeField] private float _volumeToggleStep = 0.1f;
+    [SerializeField] private WaitForSeconds _waitTime = new WaitForSeconds(1);
 
     private AudioSource _audioSource;
     private bool _isIncreaseNeeded;
-    private WaitForSeconds _waitTime = new WaitForSeconds(1);
 
     private void Start()
     {
         _audioSource = GetComponent<AudioSource>();
+        StartCoroutine(ToggleVolume());
     }
 
     private void OnTriggerEnter2D(Collider2D collision)
     {
-        if (collision.gameObject.GetComponent<Thief>())
-        {
-            _isIncreaseNeeded = true;
-            StartCoroutine(IncreaseVolume());
-        }
+        _isIncreaseNeeded = true;
     }
 
     private void OnTriggerExit2D(Collider2D collision)
     {
-        if (collision.gameObject.GetComponent<Thief>())
-        {
-            _isIncreaseNeeded = false;
-            StartCoroutine(DecreaseVolume());
-        }
+        _isIncreaseNeeded = false;
     }
 
-    private IEnumerator IncreaseVolume()
+    private IEnumerator ToggleVolume()
     {
-        while (_audioSource.volume < _maxVolume && _isIncreaseNeeded)
+        while (true)
         {
-            _audioSource.volume = Mathf.MoveTowards(_audioSource.volume, _maxVolume, _volumeToggleStep);
-            yield return _waitTime;
-        }
-    }
-
-    private IEnumerator DecreaseVolume()
-    {
-        while (_audioSource.volume > 0 && _isIncreaseNeeded == false)
-        {
-            _audioSource.volume = Mathf.MoveTowards(_audioSource.volume, 0, _volumeToggleStep);
+            _audioSource.volume = Mathf.MoveTowards(_audioSource.volume, Convert.ToSingle(_isIncreaseNeeded), _volumeToggleStep);
             yield return _waitTime;
         }
     }
