@@ -1,35 +1,66 @@
 using System;
+using System.Collections;
 using UnityEngine;
 
 [RequireComponent(typeof(AudioSource))]
 public class Signalization : MonoBehaviour
 {
     [SerializeField] private float _volumeToggleStep = 0.1f;
+    [SerializeField] private float _toggleVolumeStepTime = 1f;
+    [SerializeField] private Sensor _sensor;
 
-    private float _waitTime = 1;
+    private Coroutine _toggleVolumePrevious = null;
     private AudioSource _audioSource;
-    private bool _isIncreaseNeeded;
+    private float _minValue = 0;
+    private float _maxValue = 1;
+    private float _targetValue;
+
+    private void OnValidate()
+    {
+        if (_sensor == null)
+            throw new ArgumentNullException("Sensor");
+    }
 
     private void Start()
     {
         _audioSource = GetComponent<AudioSource>();
-        InvokeRepeating(nameof(ToggleVolume), 0, _waitTime);
+        _targetValue = _maxValue;
     }
 
-    private void OnTriggerEnter2D(Collider2D collision)
+    private void OnEnable()
     {
-        _isIncreaseNeeded = true;
+        _sensor.MotionDetected += OnMotionDetected;
     }
 
-    private void OnTriggerExit2D(Collider2D collision)
+    private void OnDisable()
     {
-        _isIncreaseNeeded = false;
+        _sensor.MotionDetected -= OnMotionDetected;
     }
 
-    private void ToggleVolume()
+    private void OnMotionDetected()
     {
-        float targetValue = Convert.ToSingle(_isIncreaseNeeded);
+        if (_toggleVolumePrevious != null)
+        {
+            StopCoroutine(_toggleVolumePrevious);
 
-        _audioSource.volume = Mathf.MoveTowards(_audioSource.volume, targetValue, _volumeToggleStep);
+            if (_targetValue == _maxValue)
+                _targetValue = _minValue;
+            else
+                _targetValue = _maxValue;
+        }
+
+        _toggleVolumePrevious = StartCoroutine(ToggleVolume());
+    }
+
+    private IEnumerator ToggleVolume()
+    {
+        WaitForSeconds waitTime = new WaitForSeconds(_toggleVolumeStepTime);
+
+        while (_audioSource.volume != _targetValue)
+        {
+            _audioSource.volume = Mathf.MoveTowards(_audioSource.volume, _targetValue, _volumeToggleStep);
+
+            yield return waitTime;
+        }
     }
 }
