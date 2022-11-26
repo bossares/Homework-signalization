@@ -1,20 +1,19 @@
 using System;
-using System.Collections;
 using UnityEngine;
 
 [RequireComponent(typeof(AudioSource))]
 public class Signalization : MonoBehaviour
 {
     [SerializeField] private float _volumeToggleStep = 0.1f;
-    [SerializeField] private WaitForSeconds _waitTime = new WaitForSeconds(1);
 
+    private float _waitTime = 1;
     private AudioSource _audioSource;
     private bool _isIncreaseNeeded;
 
     private void Start()
     {
         _audioSource = GetComponent<AudioSource>();
-        StartCoroutine(ToggleVolume());
+        InvokeRepeating(nameof(ToggleVolume), 0, _waitTime);
     }
 
     private void OnTriggerEnter2D(Collider2D collision)
@@ -27,12 +26,10 @@ public class Signalization : MonoBehaviour
         _isIncreaseNeeded = false;
     }
 
-    private IEnumerator ToggleVolume()
+    private void ToggleVolume()
     {
-        while (true)
-        {
-            _audioSource.volume = Mathf.MoveTowards(_audioSource.volume, Convert.ToSingle(_isIncreaseNeeded), _volumeToggleStep);
-            yield return _waitTime;
-        }
+        float targetValue = Convert.ToSingle(_isIncreaseNeeded);
+
+        _audioSource.volume = Mathf.MoveTowards(_audioSource.volume, targetValue, _volumeToggleStep);
     }
 }
