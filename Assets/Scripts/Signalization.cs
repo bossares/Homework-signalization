@@ -13,7 +13,6 @@ public class Signalization : MonoBehaviour
     private AudioSource _audioSource;
     private float _minValue = 0;
     private float _maxValue = 1;
-    private float _targetValue;
 
     private void OnValidate()
     {
@@ -24,7 +23,6 @@ public class Signalization : MonoBehaviour
     private void Start()
     {
         _audioSource = GetComponent<AudioSource>();
-        _targetValue = _maxValue;
     }
 
     private void OnEnable()
@@ -40,25 +38,21 @@ public class Signalization : MonoBehaviour
     private void OnMotionDetected()
     {
         if (_toggleVolumePrevious != null)
-        {
             StopCoroutine(_toggleVolumePrevious);
 
-            if (_targetValue == _maxValue)
-                _targetValue = _minValue;
-            else
-                _targetValue = _maxValue;
-        }
-
-        _toggleVolumePrevious = StartCoroutine(ToggleVolume());
+        if (_audioSource.volume != _minValue)
+            _toggleVolumePrevious = StartCoroutine(ToggleVolume(_minValue));
+        else
+            _toggleVolumePrevious = StartCoroutine(ToggleVolume(_maxValue));
     }
 
-    private IEnumerator ToggleVolume()
+    private IEnumerator ToggleVolume(float targetValue)
     {
         WaitForSeconds waitTime = new WaitForSeconds(_toggleVolumeStepTime);
 
-        while (_audioSource.volume != _targetValue)
+        while (_audioSource.volume != targetValue)
         {
-            _audioSource.volume = Mathf.MoveTowards(_audioSource.volume, _targetValue, _volumeToggleStep);
+            _audioSource.volume = Mathf.MoveTowards(_audioSource.volume, targetValue, _volumeToggleStep);
 
             yield return waitTime;
         }
